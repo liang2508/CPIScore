@@ -148,8 +148,7 @@ class TransformerBlock(nn.Module):
         out = self.dropout(self.norm2(forward+x))
         return out
 
-#class Encoder(nn.Module):
-class Decoder(nn.Module):
+class Encoder(nn.Module):
     def __init__(
             self,
             embed_size,
@@ -158,8 +157,7 @@ class Decoder(nn.Module):
             forward_expansion,
             dropout,
             device):
-    #    super(Encoder,self).__init__()
-        super(Decoder,self).__init__()
+        super(Encoder,self).__init__()
         self.embed_size = embed_size
         self.device = device
         self.word_embedding = nn.Embedding(21, embed_size)
@@ -185,11 +183,9 @@ class Decoder(nn.Module):
             out = layer(out, out, out,mask)
         return out
 
-#class DecoderBlock(nn.Module):
-class EncoderBlock(nn.Module):
+class DecoderBlock(nn.Module):
     def __init__(self, embed_size, heads, forward_expansion, dropout, device):
-      #  super(DecoderBlock, self).__init__()
-        super(EncoderBlock, self).__init__()
+        super(DecoderBlock, self).__init__()
         self.attention = SelfAttention(embed_size, heads)
         self.n = nn.Linear(int(0.5*embed_size),embed_size)
         self.norm = nn.LayerNorm(embed_size)
@@ -210,8 +206,7 @@ class EncoderBlock(nn.Module):
         out = self.transformer_block(value, key, query, pro_mask)
         return out
 
-#class Decoder(nn.Module):
-class Encoder(nn.Module):
+class Decoder(nn.Module):
     def __init__(self,
                  embed_size,
                  num_layers,
@@ -219,21 +214,14 @@ class Encoder(nn.Module):
                  device,
                  forward_expansion,
                  dropout):
-     #   super(Decoder, self).__init__()
-        super(Encoder, self).__init__()
+        super(Decoder, self).__init__()
         self.embed_size = embed_size
         self.device = device
         self.n = nn.Linear(int(0.5*self.embed_size),self.embed_size)
         self.word_embedding = nn.Embedding(38,embed_size)
         self.position_embedding = nn.Embedding(256, embed_size)
-        '''
         self.layers = nn.ModuleList(
                 [DecoderBlock(embed_size, heads, forward_expansion, dropout, device)
-                        for _ in range(num_layers)]
-        )
-        '''
-        self.layers = nn.ModuleList(
-                [EncoderBlock(embed_size, heads, forward_expansion, dropout, device)
                         for _ in range(num_layers)]
         )
         self.fc_out1 = nn.Linear(256,512)
@@ -264,14 +252,14 @@ class Transformer(nn.Module):
             forward_expansion,
             dropout=0.5):
         super(Transformer, self).__init__()
-        self.encoder = Encoder(
+        self.decoder = Decoder(
                 embed_size,
                 num_layers,
                 heads,
                 device,
                 forward_expansion,
                 dropout)
-        self.decoder = Decoder(
+        self.encoder = Encoder(
                 embed_size,
                 num_layers,
                 heads,
@@ -292,7 +280,7 @@ class Transformer(nn.Module):
         lig_mask = torch.tril(torch.ones((lig_len, lig_len))).expand(
                 N, 1, lig_len, lig_len)
         return lig_mask.to(self.device)
-    '''
+
     def forward(self, pro, lig):
         pro_mask = self.make_pro_mask(pro)
         lig_mask = self.make_lig_mask(lig)
@@ -300,15 +288,7 @@ class Transformer(nn.Module):
     #    print('lig_shape:',lig.shape,'encpro_shape:',enc_pro.shape)
         out = self.decoder(lig, enc_pro, pro_mask, lig_mask)
         return out
-'''
 
-    def forward(self, lig, pro):
-        pro_mask = self.make_pro_mask(pro)
-        lig_mask = self.make_lig_mask(lig)
-        enc_pro = self.decoder(pro, pro_mask)
-    #    print('lig_shape:',lig.shape,'encpro_shape:',enc_pro.shape)
-        out = self.encoder(lig, enc_pro, pro_mask, lig_mask)
-        return out
 
 class MolDataset(Dataset):
     def __init__(self, mol, label, max_natoms):
